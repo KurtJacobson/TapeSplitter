@@ -18,18 +18,42 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore dependencies
+      - name: Restore
         run: dotnet restore
 
       - name: Build
         run: dotnet build --no-restore -c Release
 
-      - name: Publish (self-contained folder)
-        run: dotnet publish -c Release -r win-x64 --self-contained true -o publish
+      # ── Portable single-file exe ────────────────────────────────────────────
+      - name: Publish (portable single file)
+        run: >
+          dotnet publish -c Release -r win-x64 --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -o publish-single
 
-      - name: Upload artifact
+      - name: Upload portable exe
         uses: actions/upload-artifact@v4
         with:
-          name: TapeSplitterWpf-win-x64
-          path: publish/
+          name: TapeSplitter-portable-win-x64
+          path: publish-single/TapeSplitterWpf.exe
+          if-no-files-found: error
+
+      # ── Full folder (for installer) ─────────────────────────────────────────
+      - name: Publish (folder for installer)
+        run: dotnet publish -c Release -r win-x64 --self-contained true -o publish
+
+      # ── Inno Setup installer ────────────────────────────────────────────────
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer
+        run: '& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss'
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: TapeSplitter-Setup-win-x64
+          path: installer-out/TapeSplitter-Setup-1.0.exe
           if-no-files-found: error
