@@ -1,0 +1,241 @@
+<Window x:Class="TapeSplitterWpf.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:TapeSplitterWpf"
+        Title="Tape Track Splitter" Height="820" Width="920" MinHeight="660" MinWidth="700">
+    <Window.InputBindings>
+        <KeyBinding Key="D1" Modifiers="Ctrl" Command="{Binding LoadSide1Command}"/>
+        <KeyBinding Key="D2" Modifiers="Ctrl" Command="{Binding LoadSide2Command}"/>
+    </Window.InputBindings>
+
+    <DockPanel Background="{DynamicResource App.Window.Background}">
+        <!-- ── Menu ──────────────────────────────────────────────────────── -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="Open Side _1…" Command="{Binding LoadSide1Command}" InputGestureText="Ctrl+1"/>
+                <MenuItem Header="Open Side _2…" Command="{Binding LoadSide2Command}" InputGestureText="Ctrl+2"/>
+                <Separator/>
+                <MenuItem Header="E_xit" Click="MenuExit_Click"/>
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="Theme">
+                    <MenuItem Header="_Light"  x:Name="menuThemeLight"  IsCheckable="True" Click="ThemeLight_Click"/>
+                    <MenuItem Header="_Dark"   x:Name="menuThemeDark"   IsCheckable="True" Click="ThemeDark_Click"/>
+                    <MenuItem Header="_System" x:Name="menuThemeSystem" IsCheckable="True" Click="ThemeSystem_Click" IsChecked="True"/>
+                </MenuItem>
+            </MenuItem>
+            <MenuItem Header="_Tools">
+                <MenuItem Header="_Settings…" Command="{Binding OpenSettingsCommand}"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- ── Status bar ────────────────────────────────────────────────── -->
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <TextBlock Text="{Binding Status}" Foreground="{DynamicResource App.Subtle}"/>
+            </StatusBarItem>
+            <StatusBarItem HorizontalAlignment="Right">
+                <ProgressBar Width="160" Height="12" Minimum="0" Maximum="100" Value="{Binding Progress}"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <!-- ── Main content ───────────────────────────────────────────────── -->
+        <Grid Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="72"/>   <!-- drop zones -->
+                <RowDefinition Height="114"/>  <!-- settings + album -->
+                <RowDefinition Height="32"/>   <!-- waveform toolbar -->
+                <RowDefinition Height="130"/>  <!-- waveform -->
+                <RowDefinition Height="20"/>   <!-- track count -->
+                <RowDefinition Height="*"/>    <!-- grid -->
+                <RowDefinition Height="42"/>   <!-- export bar -->
+            </Grid.RowDefinitions>
+
+            <!-- ── Row 0: Drop zones ─────────────────────────────────────── -->
+            <Grid Grid.Row="0" Margin="0,0,0,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" x:Name="drop1Border"
+                        BorderBrush="{DynamicResource App.Drop.Border}" BorderThickness="1"
+                        Background="{DynamicResource App.Drop.Background}" Cursor="Hand"
+                        AllowDrop="True" DragEnter="Drop_DragEnter" Drop="Drop1_Drop"
+                        MouseDown="Drop1_Click">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Side1.DropLabel}"
+                                   FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource App.Accent}"/>
+                        <TextBlock Text="{Binding Side1.FileLabel}" HorizontalAlignment="Center" FontSize="10"/>
+                        <TextBlock Text="{Binding Side1.DurLabel}"  HorizontalAlignment="Center" FontSize="9"
+                                   Foreground="{DynamicResource App.Subtle}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" x:Name="drop2Border"
+                        BorderBrush="{DynamicResource App.Drop.Border}" BorderThickness="1"
+                        Background="{DynamicResource App.Drop.Background}" Cursor="Hand"
+                        AllowDrop="True" DragEnter="Drop_DragEnter" Drop="Drop2_Drop"
+                        MouseDown="Drop2_Click">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Side2.DropLabel}"
+                                   FontWeight="Bold" FontSize="11" HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource App.Drop.Unloaded}"/>
+                        <TextBlock Text="{Binding Side2.FileLabel}" HorizontalAlignment="Center" FontSize="10"/>
+                        <TextBlock Text="{Binding Side2.DurLabel}"  HorizontalAlignment="Center" FontSize="9"
+                                   Foreground="{DynamicResource App.Subtle}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- ── Row 1: Detection settings + Album tags ────────────────── -->
+            <Grid Grid.Row="1" Margin="0,0,0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="55*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="45*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Detection -->
+                <GroupBox Grid.Column="0" Header="Detection Settings" Padding="8,4">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="44"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="64"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Row 0: Silence threshold -->
+                        <Label Grid.Row="0" Grid.Column="0" Content="Silence Level:" VerticalAlignment="Center"/>
+                        <Slider Grid.Row="0" Grid.Column="1" Minimum="-50" Maximum="0"
+                                Value="{Binding ThresholdDb}" TickFrequency="5" IsSnapToTickEnabled="False"
+                                VerticalAlignment="Center" Margin="4,0"/>
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding ThresholdLabel}"
+                                   FontWeight="Bold" Foreground="{DynamicResource App.Accent}"
+                                   VerticalAlignment="Center"/>
+
+                        <Label Grid.Row="0" Grid.Column="4" Content="Min Silence:" VerticalAlignment="Center"/>
+                        <local:IntegerTextBox Grid.Row="0" Grid.Column="5" Value="{Binding MinSilenceMs}"
+                                              Minimum="100" Maximum="10000" Increment="100"
+                                              Margin="2,4" VerticalAlignment="Center"/>
+                        <Label Grid.Row="0" Grid.Column="6" Content="ms" VerticalAlignment="Center"
+                               Foreground="{DynamicResource App.Subtle}"/>
+
+                        <!-- Row 1: Min track -->
+                        <Label Grid.Row="1" Grid.Column="0" Content="Min Track:" VerticalAlignment="Center"/>
+                        <local:IntegerTextBox Grid.Row="1" Grid.Column="1" Value="{Binding MinTrackSec}"
+                                              Minimum="1" Maximum="120" Increment="1"
+                                              Width="64" HorizontalAlignment="Left"
+                                              Margin="4,4,0,4" VerticalAlignment="Center"/>
+                        <Label Grid.Row="1" Grid.Column="2" Content="sec" VerticalAlignment="Center"
+                               Foreground="{DynamicResource App.Subtle}"/>
+                    </Grid>
+                </GroupBox>
+
+                <!-- Album tags -->
+                <GroupBox Grid.Column="2" Header="Album Tags" Padding="8,4">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="40"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="32"/>
+                            <ColumnDefinition Width="72"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Label Grid.Row="0" Grid.Column="0" Content="Artist:" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Artist, UpdateSourceTrigger=PropertyChanged}"
+                                 VerticalAlignment="Center" Margin="2,3"/>
+                        <Label Grid.Row="0" Grid.Column="3" Content="Year:" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="0" Grid.Column="4" Text="{Binding Year, UpdateSourceTrigger=PropertyChanged}"
+                                 VerticalAlignment="Center" Margin="2,3"/>
+
+                        <Label Grid.Row="1" Grid.Column="0" Content="Album:" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Album, UpdateSourceTrigger=PropertyChanged}"
+                                 VerticalAlignment="Center" Margin="2,3"/>
+                        <Label Grid.Row="1" Grid.Column="3" Content="Genre:" VerticalAlignment="Center"/>
+                        <TextBox Grid.Row="1" Grid.Column="4" Text="{Binding Genre, UpdateSourceTrigger=PropertyChanged}"
+                                 VerticalAlignment="Center" Margin="2,3"/>
+                    </Grid>
+                </GroupBox>
+            </Grid>
+
+            <!-- ── Row 2: Waveform toolbar ───────────────────────────────── -->
+            <DockPanel Grid.Row="2" Margin="0,0,0,2" LastChildFill="True">
+                <Button DockPanel.Dock="Left" Content="Auto-Detect Tracks"
+                        Command="{Binding DetectCommand}" FontWeight="Bold"
+                        Width="148" Margin="0,2,6,2"/>
+                <Button DockPanel.Dock="Left" Content="Clear Markers"
+                        Command="{Binding ClearMarkersCommand}"
+                        Width="106" Margin="0,2,0,2"/>
+                <TextBlock DockPanel.Dock="Left" Margin="10,0,0,0" VerticalAlignment="Center"
+                           Foreground="{DynamicResource App.Subtle}" FontSize="10"
+                           Text="Left-click to add a split marker  ·  right-click to remove  ·  drag to move"/>
+            </DockPanel>
+
+            <!-- ── Row 3: Waveform tabs ──────────────────────────────────── -->
+            <TabControl Grid.Row="3" x:Name="waveTab"
+                        SelectionChanged="WaveTab_SelectionChanged" Padding="0">
+                <TabItem Header="  Side 1  ">
+                    <local:WaveformControl x:Name="waveform1" Cursor="Hand"
+                                           MouseDown="Waveform_MouseDown"/>
+                </TabItem>
+                <TabItem Header="  Side 2  ">
+                    <local:WaveformControl x:Name="waveform2" Cursor="Hand"
+                                           MouseDown="Waveform_MouseDown"/>
+                </TabItem>
+            </TabControl>
+
+            <!-- ── Row 4: Track count ────────────────────────────────────── -->
+            <TextBlock Grid.Row="4" Text="{Binding TrackCountLabel}"
+                       Foreground="{DynamicResource App.Subtle}"
+                       FontSize="10" VerticalAlignment="Center" Margin="2,2,0,0"/>
+
+            <!-- ── Row 5: Track list ─────────────────────────────────────── -->
+            <DataGrid Grid.Row="5" x:Name="trackGrid"
+                      ItemsSource="{Binding AllTracks}"
+                      AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
+                      RowHeaderWidth="0" SelectionMode="Extended" SelectionUnit="FullRow"
+                      RowStyle="{StaticResource TrackRowStyle}"
+                      HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                      Margin="0,0,0,4">
+                <DataGrid.Columns>
+                    <DataGridTextColumn  Header="#"          Binding="{Binding Number,      Mode=OneWay}" Width="36"  IsReadOnly="True"/>
+                    <DataGridTextColumn  Header="Side"       Binding="{Binding SideDisplay, Mode=OneWay}" Width="46"  IsReadOnly="True"/>
+                    <DataGridTextColumn  Header="Track Name" Binding="{Binding Name}"                     Width="*"/>
+                    <DataGridTextColumn  Header="Start"      Binding="{Binding StartDisplay,    Mode=OneWay}" Width="70" IsReadOnly="True"/>
+                    <DataGridTextColumn  Header="End"        Binding="{Binding EndDisplay,      Mode=OneWay}" Width="70" IsReadOnly="True"/>
+                    <DataGridTextColumn  Header="Duration"   Binding="{Binding DurationDisplay, Mode=OneWay}" Width="70" IsReadOnly="True"/>
+                    <DataGridCheckBoxColumn Header="Export"  Binding="{Binding IsExported, UpdateSourceTrigger=PropertyChanged}" Width="58"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- ── Row 6: Export bar ─────────────────────────────────────── -->
+            <DockPanel Grid.Row="6" LastChildFill="False">
+                <Button DockPanel.Dock="Left" Content="Export Checked Tracks"
+                        Command="{Binding ExportCommand}" FontWeight="Bold"
+                        Margin="0,4,6,4"/>
+                <Button DockPanel.Dock="Left" Content="Open Output Folder"
+                        Command="{Binding OpenOutputFolderCommand}"
+                        Margin="0,4,6,4"/>
+                <Button DockPanel.Dock="Left" Content="Output Folder…"
+                        Command="{Binding ChooseOutputFolderCommand}"
+                        Margin="0,4,0,4"/>
+            </DockPanel>
+        </Grid>
+    </DockPanel>
+</Window>

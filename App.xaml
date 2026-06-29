@@ -1,0 +1,67 @@
+<Application x:Class="TapeSplitterWpf.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:TapeSplitterWpf"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Initial theme — replaced at runtime by ThemeManager -->
+                <ResourceDictionary Source="Themes/LightTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Unchecked track rows: gray + italic (works in both themes) -->
+            <Style x:Key="TrackRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource {x:Type DataGridRow}}">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsExported}" Value="False">
+                        <Setter Property="Foreground" Value="{DynamicResource App.Subtle}"/>
+                        <Setter Property="FontStyle"  Value="Italic"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+
+            <!-- IntegerTextBox template -->
+            <Style TargetType="local:IntegerTextBox">
+                <Setter Property="MinHeight" Value="22"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="local:IntegerTextBox">
+                            <Border BorderBrush="{DynamicResource App.Border}" BorderThickness="1"
+                                    Background="{DynamicResource App.Input.Background}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="18"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="PART_Text" Grid.Column="0" BorderThickness="0"
+                                             Background="Transparent"
+                                             Foreground="{DynamicResource App.Input.Foreground}"
+                                             CaretBrush="{DynamicResource App.Input.Foreground}"
+                                             VerticalContentAlignment="Center" Padding="3,0"/>
+                                    <Grid Grid.Column="1">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                        <RepeatButton x:Name="PART_Up"   Grid.Row="0" Content="▲"
+                                                      FontSize="7" Padding="0"
+                                                      Background="{DynamicResource App.Input.Background}"
+                                                      Foreground="{DynamicResource App.Foreground}"
+                                                      BorderThickness="1,0,0,1"
+                                                      BorderBrush="{DynamicResource App.Border}"/>
+                                        <RepeatButton x:Name="PART_Down" Grid.Row="1" Content="▼"
+                                                      FontSize="7" Padding="0"
+                                                      Background="{DynamicResource App.Input.Background}"
+                                                      Foreground="{DynamicResource App.Foreground}"
+                                                      BorderThickness="1,0,0,0"
+                                                      BorderBrush="{DynamicResource App.Border}"/>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

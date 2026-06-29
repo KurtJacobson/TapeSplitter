@@ -1,0 +1,28 @@
+# Build output
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# Rider
+.idea/
+*.DotSettings.user
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# User settings (contains local FFmpeg path — not useful to share)
+%APPDATA%/TapeSplitter/settings.json
